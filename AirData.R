@@ -3,6 +3,7 @@ library(lubridate)
 library(tidyverse)
 library(stringr)
 
+##Dataset 불러오기
 setwd("C:/Users/linc/Desktop/미세먼지/2017")
 FirstData <- read.csv("2017-1.csv", header = TRUE)
 SecondData <- read.csv("2017-2.csv", header = TRUE)
@@ -11,7 +12,7 @@ SecondData <- read.csv("2017-2.csv", header = TRUE)
 NaData1<-na.omit(FirstData)
 NaData2<-na.omit(SecondData)
 
-##지역별 월별 추출 PM10 median (측정소별 월)
+##지역별 월별 추출 PM10 mean (측정소별 월)
 MonthlyData1 <-NaData1 %>%
   filter(month(as.Date(as.character(NaData1$측정일시),"%Y%m%d"))==1) %>%
   group_by(지역) %>%
@@ -37,6 +38,11 @@ MonthlyData5 <-NaData2 %>%
   group_by(지역) %>%
   summarize(mean(PM10))
 
+MonthlyData6 <-NaData2 %>%
+  filter(month(as.Date(as.character(NaData2$측정일시),"%Y%m%d"))==6) %>%
+  group_by(지역) %>%
+  summarize(mean(PM10))
+
 
 ##열이름 재정의
 colnames(MonthlyData1)=c("area","pm10")
@@ -44,6 +50,7 @@ colnames(MonthlyData2)=c("area","pm10")
 colnames(MonthlyData3)=c("area","pm10")
 colnames(MonthlyData4)=c("area","pm10")
 colnames(MonthlyData5)=c("area","pm10")
+colnames(MonthlyData6)=c("area","pm10")
 
 #시도로 나누기 (도시별 월별평균)
 tempCityName<-str_split_fixed(MonthlyData1$area, " ", 2)
@@ -81,6 +88,13 @@ MonthlyData5C<-MonthlyData5 %>%
   group_by(city) %>%
   summarize(mean(pm10))
 
+tempCityName<-str_split_fixed(MonthlyData6$area, " ", 2)
+CityDo<-as.vector(tempCityName[,1])
+MonthlyData6<- cbind(MonthlyData6, city=CityDo)
+MonthlyData6C<-MonthlyData6 %>%
+  group_by(city) %>%
+  summarize(mean(pm10))
+
 
 
 #월정보 추가
@@ -94,9 +108,11 @@ monthval=rep(4,17)
 MonthlyData4C<- cbind(MonthlyData4C, month=monthval)
 monthval=rep(5,17)
 MonthlyData5C<- cbind(MonthlyData5C, month=monthval)
+monthval=rep(6,17)
+MonthlyData6C<- cbind(MonthlyData6C, month=monthval)
 
 
-totalMonthlyCity<-rbind(MonthlyData1C,MonthlyData2C,MonthlyData3C,MonthlyData4C,MonthlyData5C)
+totalMonthlyCity<-rbind(MonthlyData1C,MonthlyData2C,MonthlyData3C,MonthlyData4C,MonthlyData5C,MonthlyData6C)
 
 colnames(totalMonthlyCity)=c("city","pm10","month")
 ggplot(totalMonthlyCity, aes(month, pm10)) + geom_point(aes(color=city))
